@@ -1,6 +1,6 @@
 use clap::{App, Arg};
 use std::error::Error;
-use std::fs::{File,read_to_string};
+use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
@@ -55,72 +55,30 @@ fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
     }
 }
 
-fn read_lines(filename: &str) -> Vec<(usize,String)> {
-    read_to_string(filename)
-        .unwrap()
-        .lines()
-        .enumerate()
-        .map(|(num, line)| (num +1 , String::from(line)))
-        .collect()
-}
 
-fn read_lines_n(filename:&String) -> () {
-        if &filename != &"-" { 
-         let lines = read_lines(&filename); 
-          for (num, line) in lines{
-              println!("{:>6}	{}", num, line);
-          }
-        } else {
-         let stdin = io::stdin();
-         let mut line_num = 0;
-          for line in stdin.lock().lines(){
-              line_num += 1;
-              println!("{:>6}\t{}", line_num, line.unwrap());
-          }
-        }
-}
-
-fn read_lines_b(filename:&String) -> () {
-        if &filename != &"-" { 
-         let lines = read_lines(&filename); 
-          for (num, line) in lines{
-              println!("{}	{}", num, line);
-          }
-        } else {
-         let stdin = io::stdin();
-          for line in stdin.lock().lines(){
-              println!("bb {}", line.unwrap());
-          }
-        }
-}
-
-fn read_lines_normal(filename:&String) -> () {
-        if &filename != &"-" { 
-         let lines = read_lines(&filename); 
-          for (_num, line) in lines{
-              println!("{}", line);
-          }
-        } else {
-         let stdin = io::stdin();
-          for line in stdin.lock().lines(){
-              println!("{}", line.unwrap());
-          }
-        }
-}
 pub fn run (config: Config) -> MyResult<()> {
-    //let filename = config.files;
     for filename in config.files {
         match open(&filename) {
             Err(err) => eprintln!("Failed to open {}: {}", filename, err),
-            Ok(_) => (),
+            Ok(file) => {
+                let mut last_num = 0;
+                for (line_num, line) in file.lines().enumerate() {
+                    let line = line?;
+                    if config.number_lines {
+                        println!("{:>6}\t{}", line_num +1 , line);
+                    } else if config.number_nonblank_lines {
+                        if !line.is_empty(){
+                            last_num +=1;
+                            println!("{:>6}\t{}", last_num, line);
+                        } else {
+                            println!();
+                        }
+                    } else {
+                        println!("{}", line);
+                    }
+                }
+            }
         }
-   if config.number_lines {
-       read_lines_n(&filename)
-   } else if config.number_nonblank_lines {
-       read_lines_b(&filename)
-   } else {
-       read_lines_normal(&filename)
-   }
   }
     Ok(())
 }

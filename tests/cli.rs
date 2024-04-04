@@ -6,7 +6,7 @@ use std::fs;
 
 type TestResult = Result<(), Box<dyn Error>>;
 
-const PRG: &str = "catr";
+const PRG: &str = "catrs";
 const EMPTY: &str = "tests/inputs/empty.txt";
 const FOX: &str = "tests/inputs/fox.txt";
 const SPIDERS: &str = "tests/inputs/spiders.txt";
